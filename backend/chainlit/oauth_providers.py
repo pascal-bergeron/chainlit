@@ -421,7 +421,7 @@ class OktaOAuthProvider(OAuthProvider):
 
 class Auth0OAuthProvider(OAuthProvider):
     id = "auth0"
-    env = ["OAUTH_AUTH0_CLIENT_ID", "OAUTH_AUTH0_CLIENT_SECRET", "OAUTH_AUTH0_DOMAIN"]
+    env = ["OAUTH_AUTH0_CLIENT_ID", "OAUTH_AUTH0_CLIENT_SECRET", "OAUTH_AUTH0_DOMAIN", "OAUTH_AUTH0_AUDIENCE"]
 
     def __init__(self):
         self.client_id = os.environ.get("OAUTH_AUTH0_CLIENT_ID")
@@ -433,13 +433,15 @@ class Auth0OAuthProvider(OAuthProvider):
             if os.environ.get("OAUTH_AUTH0_ORIGINAL_DOMAIN")
             else self.domain
         )
+        # Allow configurable audience, with default fallback to userinfo endpoint
+        self.audience = os.environ.get("OAUTH_AUTH0_AUDIENCE", f"{self.original_domain}/userinfo")
 
         self.authorize_url = f"{self.domain}/authorize"
 
         self.authorize_params = {
             "response_type": "code",
             "scope": "openid profile email",
-            "audience": f"{self.original_domain}/userinfo",
+            "audience": self.audience,
         }
 
         if prompt := self.get_prompt():
